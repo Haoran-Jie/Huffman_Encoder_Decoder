@@ -136,6 +136,11 @@ class HuffmanCode:
         possible symbols (bytes), even if they don't all occur in the
         given sequence.
         """
+        oTable = dict()
+        for i in range(256):
+            oTable[bytes([i])]=0
+        for i in symbols:
+            oTable[i]+=1
 
     @staticmethod
     def occurrences2frequencies(occurrences):
@@ -151,3 +156,4 @@ class HuffmanCode:
         guarantee the "sum is 1" postcondition, so we refuse to
         operate on such degenerate tables).
         """
+        fTable = occurrences.
