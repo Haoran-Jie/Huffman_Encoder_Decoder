@@ -49,7 +49,21 @@ time of writing this.
 # pylint: disable=invalid-name, misplaced-comparison-constant
 
 import heapq
-import bitstring  # see this class's docstring for where to get this
+from bitstring import BitArray,BitStream  # see this class's docstring for where to get this
+
+@total_ordering
+class Node:
+    def __init__(self,priority,symbols,left=None,right=None):
+        self.priority = priority
+        self.symbols = symbols
+        self.left = left
+        self.right = right
+    
+    def __lt__(self,other):
+        return self.priority<other.priority
+    
+    def __eq__(self,other):
+        return self.priority==other.priority 
 
 
 class HuffmanCode:
@@ -81,6 +95,18 @@ class HuffmanCode:
         of symbols, you may use the makeOccurrencesTable and
         occurrences2frequencies methods in this class.
         """
+        heap = []
+        for key in frequencyTable:
+            heapq.heappush(Node(frequencyTable[key],[key]))
+        while(len(heap)>1):
+            highestp = heapq.heappop(heap)
+            secondhighestp = heapq.heappop(heap)
+            heapq.heappush(Node(highestp.priority+secondhighestp.priority,highestp.symbols+secondhighestp.symbols,highestp,secondhighestp))
+        self.tree=heap[0]
+
+        
+        
+
 
     def encode(self, plaintextBytes):
         """Take a bytes object (immutable array of bytes) to be
@@ -107,6 +133,7 @@ class HuffmanCode:
         codeword for that symbol.
         """
 
+
     @staticmethod
     def paddingSuitableFor(bits):
         """Take a bitstring of arbitrary length and return a short bitstring
@@ -115,6 +142,11 @@ class HuffmanCode:
         padding is reversible. It consists of a 1 and then as many 0s
         as necessary to reach the next multiple of 8.
         """
+        res = BitStream(bits.copy())
+        res.append(bin='1')
+        while(len(res)%8!=0):
+            res.append(bin='0')
+        return res
 
     @staticmethod
     def removePadding(bits):
@@ -125,6 +157,11 @@ class HuffmanCode:
         then the first 1. The returned result will be 1 to 8 bits
         shorter than the input.
         """
+        res = BitStream(bits.copy())
+        while res[-1]==0:
+            del res[-1]
+        del res[-1]
+        return res
 
     @staticmethod
     def makeOccurrencesTable(symbols):
@@ -156,4 +193,13 @@ class HuffmanCode:
         guarantee the "sum is 1" postcondition, so we refuse to
         operate on such degenerate tables).
         """
-        fTable = occurrences.
+        fTable = occurrences.copy()
+        total = 0
+        for key in occurrences:
+            total+=occurrences[key]
+        if total==0:
+            raise ValueError("all the occurences in the table were 0")
+        else:
+            for key in fTable:
+                fTable[key]/=total
+        return fTable
