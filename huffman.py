@@ -64,6 +64,9 @@ class Node:
     
     def __eq__(self,other):
         return self.priority==other.priority 
+    
+    def is_leaf(self):
+        return True if len(self.symbols)==1 else False
 
 
 class HuffmanCode:
@@ -117,6 +120,12 @@ class HuffmanCode:
         suitable padding (cfr paddingSuitableFor and removePadding
         methods).
         """
+        res = BitStream()
+        for i in plaintextBytes:
+            res.append(self.codewordFor(i))
+        res.append(HuffmanCode.paddingSuitableFor(res))
+        return res
+
 
     def decode(self, encodedAndPaddedBits):
         """Take a bitstring to be decoded, consisting logically of a sequence
@@ -127,11 +136,35 @@ class HuffmanCode:
         corresponding byte symbol, according to this object's Huffman
         code. Return a bytearray with the decoded result.
         """
-
+        encodedBits = HuffmanCode.removePadding(encodedAndPaddedBits)
+        res = bytes()
+        pointer=0
+        while pointer<len(encodedBits):
+            nowNode = self.tree
+            while(not nowNode.is_leaf()):
+                if(encodedBits[pointer]==0):
+                    nowNode=nowNode.left
+                else:
+                    nowNode=nowNode.right
+                pointer+=1
+            res += nowNode.symbols[0]
+        return res
+            
     def codewordFor(self, symbol):
         """Given a symbol (a single byte), return a bitstring with the
         codeword for that symbol.
         """
+        res = BitStream()
+        nowNode = self.tree
+        while(not nowNode.is_leaf()):
+            if(symbol in nowNode.left.symbols):
+                res.append(bin='0')
+                nowNode = nowNode.left
+            else:
+                res.append(bin='1')
+                nowNode = nowNode.right
+        return res 
+
 
 
     @staticmethod
@@ -142,9 +175,9 @@ class HuffmanCode:
         padding is reversible. It consists of a 1 and then as many 0s
         as necessary to reach the next multiple of 8.
         """
-        res = BitStream(bits.copy())
+        res = BitStream()
         res.append(bin='1')
-        while(len(res)%8!=0):
+        while((len(bits)+len(res))%8!=0):
             res.append(bin='0')
         return res
 
